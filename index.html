@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Catcher Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #764ba2;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #87ceeb 0%, #90ee90 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: crosshair;
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .cat {
+            position: absolute;
+            font-size: 60px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .cat:hover {
+            transform: scale(1.2);
+        }
+
+        .cat:active {
+            transform: scale(0.9);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .explosion {
+            position: absolute;
+            font-size: 40px;
+            pointer-events: none;
+            animation: explode 0.5s forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .difficulty-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.9em;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #764ba2;
+            z-index: 100;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🐱 Cat Catcher Game 🐱</h1>
+
+        <div class="score-board">
+            <div class="score-item">Score: <span id="score">0</span></div>
+            <div class="score-item">Time: <span id="timer">30</span>s</div>
+            <div class="score-item">High Score: <span id="highscore">0</span></div>
+        </div>
+
+        <div class="game-area" id="gameArea"></div>
+
+        <div class="controls">
+            <button class="start-btn" id="startBtn">Start Game</button>
+            <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+        </div>
+
+        <div class="instructions">
+            <p>🎯 Click on the cats to catch them!</p>
+            <p>⏱️ Catch as many as you can in 30 seconds</p>
+            <p>🏆 Beat your high score!</p>
+        </div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const startBtn = document.getElementById('startBtn');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const highscoreDisplay = document.getElementById('highscore');
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let catInterval;
+        let timerInterval;
+        let difficulty = 'easy';
+        let highscore = localStorage.getItem('catGameHighScore') || 0;
+
+        highscoreDisplay.textContent = highscore;
+
+        const catEmojis = ['🐱', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'];
+
+        const difficultySettings = {
+            easy: { spawnRate: 1500, catDuration: 3000 },
+            medium: { spawnRate: 1000, catDuration: 2000 },
+            hard: { spawnRate: 700, catDuration: 1500 }
+        };
+
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!gameActive) {
+                    difficultyBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    difficulty = btn.dataset.difficulty;
+                }
+            });
+        });
+
+        startBtn.addEventListener('click', startGame);
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            gameActive = true;
+            startBtn.disabled = true;
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = timeLeft;
+            gameArea.innerHTML = '';
+
+            const settings = difficultySettings[difficulty];
+
+            catInterval = setInterval(spawnCat, settings.spawnRate);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function spawnCat() {
+            if (!gameActive) return;
+
+            const cat = document.createElement('div');
+            cat.className = 'cat';
+            cat.textContent = catEmojis[Math.floor(Math.random() * catEmojis.length)];
+
+            const maxX = gameArea.clientWidth - 60;
+            const maxY = gameArea.clientHeight - 60;
+
+            cat.style.left = Math.random() * maxX + 'px';
+            cat.style.top = Math.random() * maxY + 'px';
+
+            gameArea.appendChild(cat);
+
+            cat.addEventListener('click', () => catchCat(cat));
+
+            const settings = difficultySettings[difficulty];
+            setTimeout(() => {
+                if (cat.parentElement && gameActive) {
+                    cat.remove();
+                }
+            }, settings.catDuration);
+        }
+
+        function catchCat(cat) {
+            if (!gameActive) return;
+
+            score++;
+            scoreDisplay.textContent = score;
+
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.textContent = '✨';
+            explosion.style.left = cat.style.left;
+            explosion.style.top = cat.style.top;
+            gameArea.appendChild(explosion);
+
+            setTimeout(() => explosion.remove(), 500);
+
+            cat.remove();
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(catInterval);
+            clearInterval(timerInterval);
+            startBtn.disabled = false;
+
+            if (score > highscore) {
+                highscore = score;
+                localStorage.setItem('catGameHighScore', highscore);
+                highscoreDisplay.textContent = highscore;
+            }
+
+            const gameOverDiv = document.createElement('div');
+            gameOverDiv.className = 'game-over';
+            gameOverDiv.innerHTML = `
+                🎉 Game Over! 🎉<br>
+                You caught ${score} cats!<br>
+                ${score > highscore - score ? '🏆 New High Score! 🏆' : ''}
+            `;
+            gameArea.appendChild(gameOverDiv);
+
+            setTimeout(() => gameOverDiv.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
